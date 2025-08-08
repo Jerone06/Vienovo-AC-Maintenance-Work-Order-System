@@ -334,10 +334,10 @@
         // Define priority descriptions for consistent display
         const priorityDescriptions = {
             "1": "1 - Emergency Critical: 0-2 hours (Severe accident/total breakdown risk)",
-            "2": "2 - 24 hours (Severe malfunction affecting production/safety)",
-            "3": "3 - 48 hours (Minor repairs, wear-related, non-immediate impact)",
-            "4": "4 - 72 hrs - 1 Week (Scheduled service, inspections, adjustments)",
-            "5": "5 - 1 Week - 1 Month (Improvements, innovative projects)"
+            "2": "2 - High Priority: 24 hours (Severe malfunction affecting production/safety)",
+            "3": "3 - Routine Corrective: 48 hours (Minor repairs, wear-related, non-immediate impact)",
+            "4": "4 - Preventive Actions: 72 hrs - 1 Week (Scheduled service, inspections, adjustments)",
+            "5": "5 - CAPEX/Project: 1 Week - 1 Month (Improvements, innovative projects)"
         };
 
         // Initialize Firebase and Authentication
