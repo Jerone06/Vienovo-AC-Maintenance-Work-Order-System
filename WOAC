@@ -1,0 +1,702 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vienovo AC Plant Maintenance Work Order System</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: "Inter", sans-serif;
+            background-color: #f3f4f6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 1.5rem;
+            flex-grow: 1;
+        }
+        /* Custom styles for print */
+        @media print {
+            body * {
+                visibility: hidden;
+            }
+            #printable-form, #printable-form * {
+                visibility: visible;
+            }
+            #printable-form {
+                position: absolute;
+                left: 0;
+                top: 0;
+                width: 100%;
+                height: 100%;
+                margin: 0;
+                padding: 1rem;
+                box-sizing: border-box;
+                font-size: 14px;
+                color: #000;
+            }
+            #printable-form h1,
+            #printable-form h2 {
+                text-align: center;
+                margin-bottom: 1rem;
+            }
+            #printable-form .print-section {
+                border: 1px solid #ccc;
+                padding: 1rem;
+                margin-bottom: 1rem;
+                border-radius: 0.5rem;
+            }
+            #printable-form .print-section-title {
+                font-weight: bold;
+                margin-bottom: 0.5rem;
+            }
+            #printable-form p {
+                margin-bottom: 0.5rem;
+            }
+            #printable-form .signature-line {
+                margin-top: 3rem;
+                padding-top: 0.5rem;
+                border-top: 1px solid #000;
+                text-align: center;
+                font-size: 12px;
+            }
+        }
+        .modal {
+            display: none; /* Hidden by default */
+            position: fixed; /* Stay in place */
+            z-index: 1000; /* Sit on top */
+            left: 0;
+            top: 0;
+            width: 100%; /* Full width */
+            height: 100%; /* Full height */
+            overflow: auto; /* Enable scroll if needed */
+            background-color: rgba(0,0,0,0.4); /* Black w/ opacity */
+            align-items: center;
+            justify-content: center;
+        }
+        .modal-content {
+            background-color: #fefefe;
+            margin: auto;
+            padding: 1.5rem;
+            border: 1px solid #888;
+            border-radius: 0.75rem;
+            width: 90%;
+            max-width: 800px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            position: relative;
+        }
+        .close-button {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            cursor: pointer;
+            position: absolute;
+            top: 10px;
+            right: 20px;
+        }
+        .close-button:hover,
+        .close-button:focus {
+            color: black;
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body class="bg-gray-100 text-gray-800">
+
+    <div class="container bg-white rounded-lg shadow-lg">
+        <h1 class="text-4xl font-extrabold text-center text-blue-700 mb-8 pt-4">Vienovo AC Plant Maintenance Work Order System ⚙️</h1>
+
+        <!-- Create New Work Order Form -->
+        <div class="bg-blue-50 p-6 rounded-xl shadow-md mb-8 border border-blue-200">
+            <h2 class="text-2xl font-bold text-blue-800 mb-5">Create New Work Order</h2>
+            <form id="workOrderForm" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label for="machineName" class="block text-sm font-medium text-gray-700 mb-1">Machine/Equipment Name:</label>
+                    <input type="text" id="machineName" name="machineName" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                </div>
+                <div>
+                    <label for="problemDescription" class="block text-sm font-medium text-gray-700 mb-1">Problem Description:</label>
+                    <textarea id="problemDescription" name="problemDescription" rows="2" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"></textarea>
+                </div>
+                <div>
+                    <label for="requestedBy" class="block text-sm font-medium text-gray-700 mb-1">Requested By:</label>
+                    <input type="text" id="requestedBy" name="requestedBy" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                </div>
+                <div>
+                    <label for="dateOfRequest" class="block text-sm font-medium text-gray-700 mb-1">Date of Request:</label>
+                    <input type="date" id="dateOfRequest" name="dateOfRequest" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                </div>
+                <div>
+                    <label for="priority" class="block text-sm font-medium text-gray-700 mb-1">Priority (1=High, 5=Low):</label>
+                    <select id="priority" name="priority" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                        <option value="1">1 - Emergency Critical: 0-2 hours (Severe accident/total breakdown risk)</option>
+                        <option value="2">2 - High Priority: 24 hours (Severe malfunction affecting production/safety)</option>
+                        <option value="3" selected>3 - Routine Corrective: 48 hours (Minor repairs, wear-related, non-immediate impact)</option>
+                        <option value="4">4 - Preventive Actions: 72 hrs - 1 Week (Scheduled service, inspections, adjustments)</option>
+                        <option value="5">5 - CAPEX/Project: 1 Week - 1 Month (Improvements, innovative projects)</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="natureOfWork" class="block text-sm font-medium text-gray-700 mb-1">Nature of Work:</label>
+                    <select id="natureOfWork" name="natureOfWork" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                        <option value="">Select Category</option>
+                        <option value="Electrical/PLC/Electronics">Electrical/PLC/Electronics</option>
+                        <option value="Mechanical">Mechanical</option>
+                        <option value="Electromechanical">Electromechanical</option>
+                        <option value="Fabrications">Fabrications</option>
+                        <option value="Civil Works">Civil Works</option>
+                        <option value="Safety">Safety</option>
+                    </select>
+                </div>
+                <div>
+                    <label for="workOrderType" class="block text-sm font-medium text-gray-700 mb-1">Work Order Type:</label>
+                    <select id="workOrderType" name="workOrderType" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                        <option value="">Select Type</option>
+                        <option value="Preventive">Preventive</option>
+                        <option value="Corrective">Corrective</option>
+                        <option value="Breakdown">Breakdown</option>
+                        <option value="Projects">Projects</option>
+                    </select>
+                </div>
+                 <div>
+                    <label for="department" class="block text-sm font-medium text-gray-700 mb-1">Department:</label>
+                    <select id="department" name="department" required class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                        <option value="">Select Department</option>
+                        <option value="Production">Production</option>
+                        <option value="Engineering">Engineering</option>
+                        <option value="Quality Assurance">Quality Assurance</option>
+                        <option value="Warehouse">Warehouse</option>
+                        <option value="Admin">Admin</option>
+                        <option value="Logistics">Logistics</option>
+                        <option value="Marketing">Marketing</option>
+                        <option value="Safety">Safety</option>
+                    </select>
+                </div>
+                <div class="md:col-span-2">
+                    <button type="submit" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                        Create Work Order
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- Work Order List -->
+        <div class="bg-gray-50 p-6 rounded-xl shadow-md border border-gray-200">
+            <h2 class="text-2xl font-bold text-gray-800 mb-5">All Work Orders</h2>
+            <div id="workOrdersList" class="space-y-4">
+                <!-- Work orders will be loaded here -->
+                <p class="text-center text-gray-500">No work orders yet. Create one above!</p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Work Order Detail Modal -->
+    <div id="workOrderDetailModal" class="modal">
+        <div class="modal-content">
+            <span class="close-button">&times;</span>
+            <h2 class="text-3xl font-bold text-blue-700 mb-6 text-center">Work Order Details</h2>
+
+            <form id="detailForm" class="space-y-4">
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Work Order ID:</label>
+                        <p id="detailId" class="text-lg font-semibold text-gray-900"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Date Requested:</label>
+                        <p id="detailDateRequestedDisplay" class="text-lg font-semibold text-gray-900"></p>
+                        <!-- Editable date input, initially hidden for display purposes -->
+                        <input type="date" id="detailDateOfRequestEdit" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white hidden">
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Machine/Equipment:</label>
+                        <p id="detailMachineName" class="text-lg font-semibold text-gray-900"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Requested By:</label>
+                        <p id="detailRequestedBy" class="text-lg font-semibold text-gray-900"></p>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Current Status:</label>
+                        <select id="detailStatus" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                            <option value="Pending">Pending</option>
+                            <option value="In Progress">In Progress</option>
+                            <option value="Completed">Completed</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Priority:</label>
+                        <select id="detailPriority" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                            <option value="1">1 - Emergency Critical: 0-2 hours (Severe accident/total breakdown risk)</option>
+                            <option value="2">2 - High Priority: 24 hours (Severe malfunction affecting production/safety)</option>
+                            <option value="3">3 - Routine Corrective: 48 hours (Minor repairs, wear-related, non-immediate impact)</option>
+                            <option value="4">4 - Preventive Actions: 72 hrs - 1 Week (Scheduled service, inspections, adjustments)</option>
+                            <option value="5">5 - CAPEX/Project: 1 Week - 1 Month (Improvements, innovative projects)</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-gray-700">Nature of Work:</label>
+                        <select id="detailNatureOfWork" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                            <option value="">Select Category</option>
+                            <option value="Electrical/PLC/Electronics">Electrical/PLC/Electronics</option>
+                            <option value="Mechanical">Mechanical</option>
+                            <option value="Electromechanical">Electromechanical</option>
+                            <option value="Fabrications">Fabrications</option>
+                            <option value="Civil Works">Civil Works</option>
+                            <option value="Safety">Safety</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Work Order Type:</label>
+                        <select id="detailWorkOrderType" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                            <option value="">Select Type</option>
+                            <option value="Preventive">Preventive</option>
+                            <option value="Corrective">Corrective</option>
+                            <option value="Breakdown">Breakdown</option>
+                            <option value="Projects">Projects</option>
+                        </select>
+                    </div>
+                     <div>
+                        <label class="block text-sm font-medium text-gray-700">Department:</label>
+                        <select id="detailDepartment" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                            <option value="">Select Department</option>
+                            <option value="Production">Production</option>
+                            <option value="Engineering">Engineering</option>
+                            <option value="Quality Assurance">Quality Assurance</option>
+                            <option value="Warehouse">Warehouse</option>
+                            <option value="Admin">Admin</option>
+                            <option value="Logistics">Logistics</option>
+                            <option value="Marketing">Marketing</option>
+                            <option value="Safety">Safety</option>
+                        </select>
+                    </div>
+                </div>
+
+                <hr class="my-6 border-gray-300">
+
+                <!-- Technician Fill-up Section -->
+                <h3 class="text-xl font-bold text-blue-700 mb-4">Technician Report</h3>
+                <div>
+                    <label for="detailScopeOfWorks" class="block text-sm font-medium text-gray-700 mb-1">Scope of Works Made:</label>
+                    <textarea id="detailScopeOfWorks" rows="4" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"></textarea>
+                </div>
+                <div>
+                    <label for="detailSparePartsUsed" class="block text-sm font-medium text-gray-700 mb-1">Spare Parts Used:</label>
+                    <textarea id="detailSparePartsUsed" rows="3" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white"></textarea>
+                </div>
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                        <label for="detailTimeStart" class="block text-sm font-medium text-gray-700 mb-1">Time Start:</label>
+                        <input type="datetime-local" id="detailTimeStart" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                    </div>
+                    <div>
+                        <label for="detailTimeFinished" class="block text-sm font-medium text-gray-700 mb-1">Time Finished:</label>
+                        <input type="datetime-local" id="detailTimeFinished" class="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-blue-500 focus:border-blue-500 sm:text-sm bg-white">
+                    </div>
+                </div>
+
+                <div class="flex flex-col sm:flex-row gap-4 mt-6">
+                    <button type="button" id="updateWorkOrderBtn" class="flex-1 bg-green-600 hover:bg-green-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                        Update Work Order
+                    </button>
+                    <button type="button" id="printWorkOrderBtn" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-4 rounded-lg shadow-md transition duration-300 ease-in-out transform hover:scale-105">
+                        Print Work Order
+                    </button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Hidden element for printing -->
+    <div id="printable-form" class="hidden"></div>
+
+
+    <!-- Firebase SDKs -->
+    <script type="module">
+        import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
+        import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
+        import { getFirestore, collection, addDoc, getDoc, doc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+
+        // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
+
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyC4eseBmD6sw_Cb_m2IOe-AQmVkzig6Vk4",
+  authDomain: "maintenance-work-order-df562.firebaseapp.com",
+  projectId: "maintenance-work-order-df562",
+  storageBucket: "maintenance-work-order-df562.firebasestorage.app",
+  messagingSenderId: "820976084779",
+  appId: "1:820976084779:web:c0e89d32149acb8f10c76e",
+  measurementId: "G-L68HYK3MK3"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
+        // Define priority descriptions for consistent display
+        const priorityDescriptions = {
+            "1": "1 - Emergency Critical: 0-2 hours (Severe accident/total breakdown risk)",
+            "2": "2 - 24 hours (Severe malfunction affecting production/safety)",
+            "3": "3 - 48 hours (Minor repairs, wear-related, non-immediate impact)",
+            "4": "4 - 72 hrs - 1 Week (Scheduled service, inspections, adjustments)",
+            "5": "5 - 1 Week - 1 Month (Improvements, innovative projects)"
+        };
+
+        // Initialize Firebase and Authentication
+        async function initializeFirebaseAndAuth() {
+            try {
+                // Mandatory global variables provided by the Canvas environment
+                appId = typeof __app_id !== 'undefined' ? __app_id : 'default-app-id'; // Assign to global appId
+                firebaseConfig = JSON.parse(typeof __firebase_config !== 'undefined' ? __firebase_config : '{}'); // Assign to global firebaseConfig
+
+                app = initializeApp(firebaseConfig);
+                db = getFirestore(app);
+                auth = getAuth(app);
+
+                // Authenticate user: use custom token if available, otherwise sign in anonymously
+                if (typeof __initial_auth_token !== 'undefined') {
+                    await signInWithCustomToken(auth, __initial_auth_token);
+                } else {
+                    await signInAnonymously(auth);
+                }
+                currentUserId = auth.currentUser?.uid || crypto.randomUUID(); // Get UID or generate random for anonymous
+                console.log("Firebase initialized and user authenticated. User ID:", currentUserId);
+
+                // Start listening for work orders after successful auth
+                listenForWorkOrders();
+
+            } catch (error) {
+                console.error("Error initializing Firebase or authenticating:", error);
+                // Display error message to user in a non-alert way
+                const workOrdersList = document.getElementById('workOrdersList');
+                workOrdersList.innerHTML = `<p class="text-red-500 text-center">Error loading system: ${error.message}. Please try again.</p>`;
+            }
+        }
+
+        // --- Firestore Operations ---
+
+        /**
+         * Adds a new work order to Firestore.
+         * @param {object} workOrderData - The data for the new work order.
+         */
+        async function addWorkOrder(workOrderData) {
+            let docId = null;
+            try {
+                // Add to Firestore
+                const workOrdersColRef = collection(db, `artifacts/${appId}/public/data/work_orders`);
+                const docRef = await addDoc(workOrdersColRef, {
+                    ...workOrderData,
+                    createdAt: new Date(), // Timestamp for creation
+                    status: "Pending" // Default status for new orders
+                });
+                docId = docRef.id;
+                console.log("Document written to Firestore with ID: ", docId);
+
+                return docId;
+
+            } catch (e) {
+                console.error("Error adding document: ", e);
+                throw e;
+            }
+        }
+
+
+        /**
+         * Updates an existing work order in Firestore.
+         * @param {string} id - The ID of the work order to update.
+         * @param {object} updates - The fields to update.
+         */
+        async function updateWorkOrder(id, updates) {
+            try {
+                const workOrderDocRef = doc(db, `artifacts/${appId}/public/data/work_orders`, id);
+                await updateDoc(workOrderDocRef, updates);
+                console.log("Document updated successfully in Firestore!");
+            } catch (e) {
+                console.error("Error updating document in Firestore: ", e);
+                throw e;
+            }
+        }
+
+        /**
+         * Listens for real-time updates to work orders and displays them.
+         */
+        function listenForWorkOrders() {
+            const workOrdersListDiv = document.getElementById('workOrdersList');
+            // Create a query to order work orders by creation date (optional, but good for display)
+            const q = query(collection(db, `artifacts/${appId}/public/data/work_orders`)); // No orderBy to avoid index issues. Sort in memory.
+
+            onSnapshot(q, (snapshot) => {
+                let workOrders = [];
+                snapshot.forEach((doc) => {
+                    workOrders.push({ id: doc.id, ...doc.data() });
+                });
+
+                // Sort work orders by createdAt descending (newest first) in memory
+                workOrders.sort((a, b) => b.createdAt.toDate().getTime() - a.createdAt.toDate().getTime());
+
+                displayWorkOrders(workOrders);
+            }, (error) => {
+                console.error("Error listening to work orders:", error);
+                workOrdersListDiv.innerHTML = `<p class="text-red-500 text-center">Error loading work orders: ${error.message}</p>`;
+            });
+        }
+
+        // --- UI Functions ---
+
+        /**
+         * Displays the list of work orders in the UI.
+         * @param {Array<object>} workOrders - An array of work order objects.
+         */
+        function displayWorkOrders(workOrders) {
+            const workOrdersListDiv = document.getElementById('workOrdersList');
+            workOrdersListDiv.innerHTML = ''; // Clear existing list
+
+            if (workOrders.length === 0) {
+                workOrdersListDiv.innerHTML = '<p class="text-center text-gray-500">No work orders yet. Create one above!</p>';
+                return;
+            }
+
+            workOrders.forEach(order => {
+                const card = document.createElement('div');
+                card.className = `bg-white p-5 rounded-lg shadow-md border ${order.status === 'Completed' ? 'border-green-300' : order.status === 'In Progress' ? 'border-yellow-300' : 'border-gray-300'} flex flex-col sm:flex-row justify-between items-start sm:items-center cursor-pointer hover:bg-gray-50 transition duration-200 ease-in-out`;
+                
+                // Determine priority display color/style if needed
+                let priorityColorClass = '';
+                switch (order.priority) {
+                    case '1': priorityColorClass = 'text-red-700 font-bold'; break; // High priority
+                    case '2': priorityColorClass = 'text-orange-600'; break;
+                    case '3': priorityColorClass = 'text-blue-600'; break; // Medium priority
+                    case '4': priorityColorClass = 'text-green-600'; break;
+                    case '5': priorityColorClass = 'text-gray-500'; break; // Low priority
+                    default: priorityColorClass = 'text-gray-500'; // Default
+                }
+
+                card.innerHTML = `
+                    <div class="mb-3 sm:mb-0 flex-grow">
+                        <h3 class="text-xl font-bold text-blue-800">${order.machineName}</h3>
+                        <p class="text-gray-600">Problem: ${order.problemDescription}</p>
+                        <p class="text-sm text-gray-500">Requested by: ${order.requestedBy} | Date: ${order.dateOfRequest || 'N/A'}</p>
+                        <p class="text-sm ${priorityColorClass}">Priority: ${priorityDescriptions[order.priority] || 'N/A'}</p>
+                        <p class="text-sm text-gray-600">Nature of Work: ${order.natureOfWork || 'N/A'}</p>
+                        <p class="text-sm text-gray-600">Work Order Type: ${order.workOrderType || 'N/A'}</p>
+                        <p class="text-sm text-gray-600">Department: ${order.department || 'N/A'}</p>
+                    </div>
+                    <div class="flex items-center gap-4 flex-shrink-0">
+                        <span class="px-3 py-1 text-sm font-semibold rounded-full ${order.status === 'Completed' ? 'bg-green-100 text-green-800' : order.status === 'In Progress' ? 'bg-yellow-100 text-yellow-800' : 'bg-gray-100 text-gray-800'}">
+                            ${order.status}
+                        </span>
+                        <button data-id="${order.id}" class="view-details-btn bg-blue-500 hover:bg-blue-600 text-white text-sm font-bold py-1.5 px-3 rounded-md shadow transition duration-300 ease-in-out">
+                            View Details
+                        </button>
+                    </div>
+                `;
+                workOrdersListDiv.appendChild(card);
+            });
+
+            // Attach event listeners to "View Details" buttons
+            document.querySelectorAll('.view-details-btn').forEach(button => {
+                button.addEventListener('click', (event) => {
+                    const workOrderId = event.target.dataset.id;
+                    openWorkOrderDetailModal(workOrderId);
+                });
+            });
+        }
+
+        // --- Form Submission Handlers ---
+
+        document.getElementById('workOrderForm').addEventListener('submit', async (event) => {
+            event.preventDefault();
+            const form = event.target;
+            const newWorkOrder = {
+                machineName: form.machineName.value,
+                problemDescription: form.problemDescription.value,
+                requestedBy: form.requestedBy.value,
+                dateOfRequest: form.dateOfRequest.value, // Capture date of request
+                priority: form.priority.value,
+                natureOfWork: form.natureOfWork.value,
+                workOrderType: form.workOrderType.value,
+                department: form.department.value,
+                scopeOfWorks: "", // Initialize empty
+                sparePartsUsed: "", // Initialize empty
+                timeStart: "", // Initialize empty
+                timeFinished: "" // Initialize empty
+            };
+
+            try {
+                await addWorkOrder(newWorkOrder);
+                form.reset(); // Clear the form
+                document.getElementById('priority').value = '3'; // Reset priority to default
+                document.getElementById('natureOfWork').value = ''; // Reset nature of work to default
+                document.getElementById('workOrderType').value = ''; // Reset work order type to default
+                document.getElementById('department').value = ''; // Reset department to default
+                // Success message (optional, as list updates automatically)
+            } catch (error) {
+                console.error("Failed to add work order:", error);
+                // Display error to user
+            }
+        });
+
+        // --- Modal Functions ---
+
+        const workOrderDetailModal = document.getElementById('workOrderDetailModal');
+        const closeModalBtn = workOrderDetailModal.querySelector('.close-button');
+        let currentWorkOrderId = null; // To store the ID of the work order currently being viewed/edited
+
+        // Close modal when close button is clicked
+        closeModalBtn.addEventListener('click', () => {
+            workOrderDetailModal.style.display = 'none';
+        });
+
+        // Close modal when clicking outside of it
+        window.addEventListener('click', (event) => {
+            if (event.target === workOrderDetailModal) {
+                workOrderDetailModal.style.display = 'none';
+            }
+        });
+
+        /**
+         * Opens the work order detail modal and populates it with data.
+         * @param {string} id - The ID of the work order to display.
+         */
+        async function openWorkOrderDetailModal(id) {
+            currentWorkOrderId = id;
+            try {
+                // Fetch the specific document data for display
+                const workOrderDocRef = doc(db, `artifacts/${appId}/public/data/work_orders`, id);
+                const docSnap = await getDoc(workOrderDocRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+
+                    document.getElementById('detailId').textContent = id;
+                    document.getElementById('detailDateRequestedDisplay').textContent = data.dateOfRequest || 'N/A'; // Display the date
+                    document.getElementById('detailDateOfRequestEdit').value = data.dateOfRequest || ''; // Set value for potential edit
+                    document.getElementById('detailMachineName').textContent = data.machineName;
+                    document.getElementById('detailProblemDescription').textContent = data.problemDescription;
+                    document.getElementById('detailRequestedBy').textContent = data.requestedBy;
+                    document.getElementById('detailStatus').value = data.status || 'Pending';
+                    document.getElementById('detailPriority').value = data.priority || '3'; // Set priority in modal based on stored value
+                    document.getElementById('detailNatureOfWork').value = data.natureOfWork || ''; // Set nature of work in modal
+                    document.getElementById('detailWorkOrderType').value = data.workOrderType || ''; // Set work order type in modal
+                    document.getElementById('detailDepartment').value = data.department || ''; // Set department in modal
+
+                    // Technician Report fields
+                    document.getElementById('detailScopeOfWorks').value = data.scopeOfWorks || '';
+                    document.getElementById('detailSparePartsUsed').value = data.sparePartsUsed || '';
+
+                    // Convert Firestore Timestamps to datetime-local format if they exist
+                    document.getElementById('detailTimeStart').value = data.timeStart ? new Date(data.timeStart).toISOString().slice(0, 16) : '';
+                    document.getElementById('detailTimeFinished').value = data.timeFinished ? new Date(data.timeFinished).toISOString().slice(0, 16) : '';
+
+                    workOrderDetailModal.style.display = 'flex'; // Use flex to center the modal content
+                } else {
+                    console.error("No such document!");
+                    // Show error message to user
+                }
+            } catch (error) {
+                console.error("Error fetching work order details:", error);
+                // Show error message to user
+            }
+        }
+
+        // Handle update button click in the modal
+        document.getElementById('updateWorkOrderBtn').addEventListener('click', async () => {
+            if (!currentWorkOrderId) return;
+
+            const updatedData = {
+                status: document.getElementById('detailStatus').value,
+                dateOfRequest: document.getElementById('detailDateOfRequestEdit').value, // Get date of request from modal
+                priority: document.getElementById('detailPriority').value, // Get priority from modal
+                natureOfWork: document.getElementById('detailNatureOfWork').value, // Get nature of work from modal
+                workOrderType: document.getElementById('detailWorkOrderType').value, // Get work order type from modal
+                department: document.getElementById('detailDepartment').value, // Get department from modal
+                scopeOfWorks: document.getElementById('detailScopeOfWorks').value,
+                sparePartsUsed: document.getElementById('detailSparePartsUsed').value,
+                timeStart: document.getElementById('detailTimeStart').value,
+                timeFinished: document.getElementById('detailTimeFinished').value
+            };
+
+            try {
+                await updateWorkOrder(currentWorkOrderId, updatedData);
+                workOrderDetailModal.style.display = 'none'; // Close modal after update
+                // Success feedback (optional)
+            } catch (error) {
+                console.error("Failed to update work order:", error);
+                // Display error to user
+            }
+        });
+
+        // --- Print Functionality ---
+
+        document.getElementById('printWorkOrderBtn').addEventListener('click', async () => {
+            if (!currentWorkOrderId) return;
+
+            try {
+                const workOrderDocRef = doc(db, `artifacts/${appId}/public/data/work_orders`, currentWorkOrderId);
+                const docSnap = await getDoc(workOrderDocRef);
+
+                if (docSnap.exists()) {
+                    const data = docSnap.data();
+                    const printableFormDiv = document.getElementById('printable-form');
+
+                    // Prepare the content for printing
+                    printableFormDiv.innerHTML = `
+                        <h1 class="text-2xl font-bold">Vienovo AC Plant Maintenance Work Order</h1>
+                        <h2 class="text-xl">Work Order ID: ${currentWorkOrderId}</h2>
+
+                        <div class="print-section">
+                            <div class="print-section-title">Request Details:</div>
+                            <p><strong>Date Requested:</strong> ${data.dateOfRequest || 'N/A'}</p>
+                            <p><strong>Machine/Equipment:</strong> ${data.machineName}</p>
+                            <p><strong>Problem Description:</strong> ${data.problemDescription}</p>
+                            <p><strong>Requested By:</strong> ${data.requestedBy}</p>
+                            <p><strong>Assigned Technician:</strong> ___________________________________</p> <!-- Manually assigned -->
+                            <p><strong>Current Status:</strong> ${data.status}</p>
+                            <p><strong>Priority:</strong> ${priorityDescriptions[data.priority] || 'N/A'}</p>
+                            <p><strong>Nature of Work:</strong> ${data.natureOfWork || 'N/A'}</p>
+                            <p><strong>Work Order Type:</strong> ${data.workOrderType || 'N/A'}</p>
+                            <p><strong>Department:</strong> ${data.department || 'N/A'}</p>
+                        </div>
+
+                        <div class="print-section">
+                            <div class="print-section-title">Technician Report:</div>
+                            <p><strong>Scope of Works Made:</strong> ${data.scopeOfWorks || '____________________________________________________________________________________________________________________________________________________________'}</p>
+                            <p><strong>Spare Parts Used:</strong> ${data.sparePartsUsed || '_________________________________________________________________________________________________________________________________________________________________________________________________'}</p>
+                            <p><strong>Time Start:</strong> ${data.timeStart ? new Date(data.timeStart).toLocaleString() : '________________________________'}</p>
+                            <p><strong>Time Finished:</strong> ${data.timeFinished ? new Date(data.timeFinished).toLocaleString() : '________________________________'}</p>
+                        </div>
+
+                        <div class="print-section">
+                            <div class="print-section-title">For Signatures:</div>
+                            <p class="signature-line">Technician Signature</p>
+                            <p class="signature-line">Supervisor Signature</p>
+                            <p class="signature-line">Date</p>
+                        </div>
+                    `;
+
+                    // Trigger browser print dialog
+                    window.print();
+                } else {
+                    console.error("Could not find work order for printing.");
+                }
+            } catch (error) {
+                console.error("Error preparing for print:", error);
+            }
+        });
+
+        // Initialize Firebase and Auth when the window loads
+        window.onload = initializeFirebaseAndAuth;
+    </script>
+</body>
+</html>
