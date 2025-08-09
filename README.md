@@ -323,21 +323,34 @@
         import { getAuth, signInAnonymously, signInWithCustomToken } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-auth.js";
         import { getFirestore, collection, addDoc, getDoc, doc, updateDoc, onSnapshot, query } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Global variables for Firebase instances
-        let app;
-        let db;
-        let auth;
-        let currentUserId; // To store the authenticated user ID
-        let appId; // Declare appId globally
-        let firebaseConfig; // Declare firebaseConfig globally
+        // Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
+const firebaseConfig = {
+  apiKey: "AIzaSyC4eseBmD6sw_Cb_m2IOe-AQmVkzig6Vk4",
+  authDomain: "maintenance-work-order-df562.firebaseapp.com",
+  projectId: "maintenance-work-order-df562",
+  storageBucket: "maintenance-work-order-df562.firebasestorage.app",
+  messagingSenderId: "820976084779",
+  appId: "1:820976084779:web:c0e89d32149acb8f10c76e",
+  measurementId: "G-L68HYK3MK3"
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const analytics = getAnalytics(app);
         // Define priority descriptions for consistent display
         const priorityDescriptions = {
             "1": "1 - Emergency Critical: 0-2 hours (Severe accident/total breakdown risk)",
-            "2": "2 - High Priority: 24 hours (Severe malfunction affecting production/safety)",
-            "3": "3 - Routine Corrective: 48 hours (Minor repairs, wear-related, non-immediate impact)",
-            "4": "4 - Preventive Actions: 72 hrs - 1 Week (Scheduled service, inspections, adjustments)",
-            "5": "5 - CAPEX/Project: 1 Week - 1 Month (Improvements, innovative projects)"
+            "2": "2 - 24 hours (Severe malfunction affecting production/safety)",
+            "3": "3 - 48 hours (Minor repairs, wear-related, non-immediate impact)",
+            "4": "4 - 72 hrs - 1 Week (Scheduled service, inspections, adjustments)",
+            "5": "5 - 1 Week - 1 Month (Improvements, innovative projects)"
         };
 
         // Initialize Firebase and Authentication
